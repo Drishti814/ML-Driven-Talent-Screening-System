@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
-# Attempt to load the spaCy model
+#Attempt to load the spaCy model
 try:
     nlp = spacy.load("en_core_web_sm")
 except IOError:
@@ -16,17 +16,17 @@ except IOError:
     spacy.cli.download("en_core_web_sm")
     nlp = spacy.load("en_core_web_sm")
 
-# Preprocess text
+#Preprocess text
 def preprocess_text(text):
     doc = nlp(text)
     clean = [token.lemma_ for token in doc if not token.is_stop and not token.is_punct and token.is_alpha]
     return " ".join(clean)
 
-# Load model
+#Load model
 with open('model_res.pkl', 'rb') as file:
     model_pipeline = pickle.load(file)
 
-# Category mapping
+#Category mapping
 category_mapping = {
     15: "Java Developer",
     23: "Testing",
@@ -55,13 +55,13 @@ category_mapping = {
     0: "Advocate",
 }
 
-# Predict category
+#Predict category
 def predict_category(text):
     cleaned_text = preprocess_text(text)
     prediction_id = model_pipeline.predict([cleaned_text])[0]
     return category_mapping.get(prediction_id, "Unknown")
 
-# Extract text
+#Extract text
 def extract_text_from_pdf(pdf_file):
     with fitz.open(stream=pdf_file.read(), filetype="pdf") as doc:
         text = ""
@@ -73,12 +73,13 @@ def extract_text_from_docx(docx_file):
     doc = Document(docx_file)
     return "\n".join([para.text for para in doc.paragraphs])
 
-# Main app
+#Main app
 def main():
     st.title("Advanced Resume Screening App", anchor=None)
     st.markdown('<p class="big-font">Welcome to the Advanced Resume Screening App!</p>', unsafe_allow_html=True)
     st.markdown("## Upload your resume or type in your details below:")
 
+    #Resume upload
     col1, col2 = st.columns(2)
     with col1:
         uploaded_file = st.file_uploader("Upload Your Resume", type=["txt", "pdf", "docx"])
@@ -94,7 +95,7 @@ def main():
         elif uploaded_file.type == "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
             resume_text = extract_text_from_docx(uploaded_file)
 
-        # Job Description Section
+        #Job Description Section
         st.markdown("## Upload or Type Job Description:")
         jd_col1, jd_col2 = st.columns(2)
 
@@ -112,7 +113,6 @@ def main():
         with jd_col2:
             jd_text_manual = st.text_area("Type Job Description here:")
 
-        # Priority: manual > file
         if jd_text_manual.strip():
             jd_text = jd_text_manual
 
@@ -126,8 +126,9 @@ def main():
 
     elif resume_text_manual:
         resume_text = resume_text_manual
-        jd_text = ""  # No JD if typed resume
+        jd_text = ""  
 
+    #Analyzing
     if resume_text and st.button("Analyze Resume"):
         with st.spinner("Analyzing..."):
             category = predict_category(resume_text)
@@ -137,7 +138,7 @@ def main():
                 match_score = calculate_match_score(resume_text, jd_text)
                 st.markdown(f"### Resume–JD Match: **{match_score:.2f}%**")
 
-            # WordCloud
+            #WordCloud
             cleaned_text = preprocess_text(resume_text)
             wordcloud = WordCloud(width=800, height=400, background_color='white').generate(cleaned_text)
             fig, ax = plt.subplots()
